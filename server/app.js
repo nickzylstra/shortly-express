@@ -103,7 +103,24 @@ app.get('/login', (req, res, next) => {
 });
 
 app.post('/login', (req, res, next) => {
+  const { username, password } = req.body;
+  models.Users.get({username})
+    .then(({password, salt}) => {
+      debugger;
+      const isAuthed = models.Users.compare(password, password, salt);
 
+      if (isAuthed) {
+        // TODO give cookie representing auth
+        res.redirect('/');
+      } else {
+        // TODO tell user why password failed
+        res.redirect('/login');
+      }
+    })
+    .catch((err) => {
+      // TODO tell user why login failed
+      res.redirect('/login');
+    });
 });
 
 /************************************************************/
