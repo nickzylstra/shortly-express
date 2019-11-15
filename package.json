@@ -10,8 +10,8 @@
   },
   "scripts": {
     "postinstall": "curl -s https://raw.githubusercontent.com/reactorcore/pomander/master/bin/install | bash && ./node_modules/.bin/jsdoc ./server -r -d docs",
-    "start": "nodemon --ignore node_modules server",
-    "test": "mocha --bail --reporter nyan test/ServerSpec.js; pkill -n node;",
+    "start": "nodemon --inspect --ignore node_modules server",
+    "test": "mocha --inspect=9230 --bail --reporter nyan test/ServerSpec.js; pkill -n node;",
     "lint": "eslint ./"
   },
   "dependencies": {

@@ -24,6 +24,7 @@ describe('', function() {
   var clearDB = function(connection, tablenames, done) {
     var count = 0;
     tablenames.forEach(function(tablename) {
+      debugger;
       connection.query('DROP TABLE IF EXISTS ' + tablename, function() {
         count++;
         if (count === tablenames.length) {
@@ -39,8 +40,8 @@ describe('', function() {
     /* TODO: Update user and password if different than on your local machine            */
     /*************************************************************************************/
     db = mysql.createConnection({
-      user: 'student',
-      password: 'student',
+      user: 'root',
+      password: 'plantlife',
       database: 'shortly'
     });
 
