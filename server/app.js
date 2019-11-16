@@ -3,6 +3,7 @@ const path = require('path');
 const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
+const cookieParser = require('./middleware/cookieParser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
 
@@ -14,8 +15,61 @@ app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(cookieParser);
+app.use(Auth.createSession);
+
+/************************************************************/
+// Write your authentication routes here
+/************************************************************/
+
+app.get('/signup', (req, res, next) => {
+  res.render('signup');
+});
+
+app.post('/signup', (req, res, next) => {
+  const { username, password } = req.body;
+  const newUser = { username, password };
+  models.Users.create(newUser)
+    .then((data) => {
+      res.redirect('/');
+    })
+    .catch((err) => {
+      // TODO tell user why sign up failed
+      // alert(err);
+      res.redirect('/signup');
+    });
+});
+
+app.get('/login', (req, res, next) => {
+  res.render('login');
+});
+
+app.post('/login', (req, res, next) => {
+  const { username, password } = req.body;
+  models.Users.get({username})
+    .then((user) => {
+      const isAuthed = models.Users.compare(password, user.password, user.salt);
+
+      if (isAuthed) {
+        req.session.userId = user.id;
+        Auth.authenticateSession(req, res, () => {
+          res.redirect('/');
+          next();
+        });
+      } else {
+        // TODO tell user why password failed
+        res.redirect('/login');
+      }
+    })
+    .catch((err) => {
+      // TODO tell user why login failed
+      res.redirect('/login');
+    });
+});
 
 
+// SECURE routes only after here
+app.use(Auth.verifySession);
 
 app.get('/',
   (req, res) => {
@@ -74,51 +128,6 @@ app.post('/links',
       });
   });
 
-/************************************************************/
-// Write your authentication routes here
-/************************************************************/
-
-app.get('/signup', (req, res, next) => {
-  res.render('signup');
-});
-
-app.post('/signup', (req, res, next) => {
-  const { username, password } = req.body;
-  const newUser = { username, password };
-  models.Users.create(newUser)
-    .then((data) => {
-      res.redirect('/');
-    })
-    .catch((err) => {
-      // TODO tell user why sign up failed
-      // alert(err);
-      res.redirect('/signup');
-    });
-});
-
-app.get('/login', (req, res, next) => {
-  res.render('login');
-});
-
-app.post('/login', (req, res, next) => {
-  const { username, password } = req.body;
-  models.Users.get({username})
-    .then((user) => {
-      const isAuthed = models.Users.compare(password, user.password, user.salt);
-
-      if (isAuthed) {
-        // TODO give cookie representing auth
-        res.redirect('/');
-      } else {
-        // TODO tell user why password failed
-        res.redirect('/login');
-      }
-    })
-    .catch((err) => {
-      // TODO tell user why login failed
-      res.redirect('/login');
-    });
-});
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail

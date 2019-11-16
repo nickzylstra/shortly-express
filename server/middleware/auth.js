@@ -61,6 +61,21 @@ module.exports.createSession = (req, res, next) => {
   }
 };
 
+module.exports.verifySession = (req, res, next) => {
+  if (req.session.userId) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+};
+
+module.exports.authenticateSession = (req, res, next) => {
+  // module.Sessions.update()
+  //   .then(() => {
+  //     next();
+  //   });
+};
+
 /************************************************************/
 // Add additional authentication middleware functions below
 /************************************************************/
