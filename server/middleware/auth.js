@@ -8,47 +8,54 @@ module.exports.createSession = (req, res, next) => {
 
   if (!req.session) {
     req.session = {};
+    req.session.user = {};
+    req.session.hash = reqCookieVal;
   }
 
-  const createSessionAndGetId = function createSessionAndGetId(callback) {
+  const createSessionAndGetIds = function createSessionAndGetIds(callback) {
     return new Promise((resolve, reject) => {
       models.Sessions.create()
         .then(({ insertId }) => {
-          models.Sessions.get({id: insertId})
-            .then(({ hash }) => {
-              resolve(hash);
+          models.Sessions.get({ id: insertId })
+            .then((session) => {
+              resolve(session);
             });
         });
     });
   };
 
   if (!parsedCookies || !reqCookieVal) {
-    createSessionAndGetId()
-      .then((hash) => {
-        res.cookie(ourCookieName, hash);
+    createSessionAndGetIds()
+      .then(({ hash }) => {
         req.session.hash = hash;
+        res.cookie(ourCookieName, hash);
         next();
-      })
-      .catch((err) =>{
-        console.log(err);
-      })
-      .catch((err) =>{
-        console.log(err);
       });
   } else {
     models.Sessions.get({ hash: reqCookieVal })
-      .then(({ hash }) => {
-        debugger;
-        if (hash === reqCookieVal) {
-          // valid session
-          next();
-        } else {
+      .then((session) => {
+        if (!session || session.hash !== reqCookieVal) {
           // invalid session
-
+          createSessionAndGetIds()
+            .then(({ hash, userId }) => {
+              req.session.hash = hash;
+              res.cookie(ourCookieName, hash);
+              next();
+            });
+        } else {
+          // valid session
+          models.Users.get({ id: session.userId })
+            .then((user) => {
+              if (user) {
+                req.session.user.username = user.username;
+                req.session.userId = user.id;
+              }
+              next();
+            });
         }
-        next();
       })
       .catch((err) => {
+        debugger;
         next();
       });
   }
