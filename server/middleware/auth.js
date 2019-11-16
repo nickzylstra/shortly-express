@@ -10,26 +10,42 @@ module.exports.createSession = (req, res, next) => {
     req.session = {};
   }
 
+  const createSessionAndGetId = function createSessionAndGetId(callback) {
+    return new Promise((resolve, reject) => {
+      models.Sessions.create()
+        .then(({ insertId }) => {
+          models.Sessions.get({id: insertId})
+            .then(({ hash }) => {
+              resolve(hash);
+            });
+        });
+    });
+  };
+
   if (!parsedCookies || !reqCookieVal) {
-    models.Sessions.create()
-      .then(({ insertId }) => {
-        models.Sessions.get({id: insertId})
-          .then(({ hash }) => {
-            res.cookie(ourCookieName, hash);
-            req.session.hash = hash;
-            next();
-          })
-          .catch((err) =>{
-            console.log(err);
-          });
+    createSessionAndGetId()
+      .then((hash) => {
+        res.cookie(ourCookieName, hash);
+        req.session.hash = hash;
+        next();
+      })
+      .catch((err) =>{
+        console.log(err);
       })
       .catch((err) =>{
         console.log(err);
       });
   } else {
     models.Sessions.get({ hash: reqCookieVal })
-      .then((session) => {
-        //if(session[0])
+      .then(({ hash }) => {
+        debugger;
+        if (hash === reqCookieVal) {
+          // valid session
+          next();
+        } else {
+          // invalid session
+
+        }
         next();
       })
       .catch((err) => {
