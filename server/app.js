@@ -30,12 +30,15 @@ app.post('/signup', (req, res, next) => {
   const { username, password } = req.body;
   const newUser = { username, password };
   models.Users.create(newUser)
-    .then((data) => {
-      res.redirect('/');
+    .then(({ insertId }) => {
+      // debugger;
+      req.session.userId = insertId;
+      Auth.authenticateSession(req, res, () => {
+        res.redirect('/');
+      });
     })
     .catch((err) => {
       // TODO tell user why sign up failed
-      // alert(err);
       res.redirect('/signup');
     });
 });
@@ -46,15 +49,13 @@ app.get('/login', (req, res, next) => {
 
 app.post('/login', (req, res, next) => {
   const { username, password } = req.body;
-  models.Users.get({username})
+  models.Users.get({ username })
     .then((user) => {
       const isAuthed = models.Users.compare(password, user.password, user.salt);
-
       if (isAuthed) {
         req.session.userId = user.id;
         Auth.authenticateSession(req, res, () => {
           res.redirect('/');
-          next();
         });
       } else {
         // TODO tell user why password failed
@@ -96,7 +97,7 @@ app.post('/links',
   (req, res, next) => {
     var url = req.body.url;
     if (!models.Links.isValidUrl(url)) {
-    // send back a 404 if link is not valid
+      // send back a 404 if link is not valid
       return res.sendStatus(404);
     }
 

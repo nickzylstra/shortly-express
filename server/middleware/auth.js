@@ -69,11 +69,13 @@ module.exports.verifySession = (req, res, next) => {
   }
 };
 
-module.exports.authenticateSession = (req, res, next) => {
-  // module.Sessions.update()
-  //   .then(() => {
-  //     next();
-  //   });
+module.exports.authenticateSession = ({ session }, res, next) => {
+  models.Sessions.update({hash: session.hash}, {userId: session.userId})
+    .then(() => {
+      next();
+    })
+    .catch((err) => {
+    });
 };
 
 /************************************************************/
