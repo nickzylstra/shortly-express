@@ -87,13 +87,11 @@ app.post('/signup', (req, res, next) => {
   const newUser = { username, password };
   models.Users.create(newUser)
     .then((data) => {
-      // debugger;
-      res.redirect('/login');
+      res.redirect('/');
     })
     .catch((err) => {
       // TODO tell user why sign up failed
       // alert(err);
-      // debugger;
       res.redirect('/signup');
     });
 });
@@ -105,9 +103,8 @@ app.get('/login', (req, res, next) => {
 app.post('/login', (req, res, next) => {
   const { username, password } = req.body;
   models.Users.get({username})
-    .then(({password, salt}) => {
-      debugger;
-      const isAuthed = models.Users.compare(password, password, salt);
+    .then((user) => {
+      const isAuthed = models.Users.compare(password, user.password, user.salt);
 
       if (isAuthed) {
         // TODO give cookie representing auth
