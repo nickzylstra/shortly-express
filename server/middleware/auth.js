@@ -6,10 +6,8 @@ module.exports.createSession = (req, res, next) => {
   const ourCookieName = 'shortlyid';
   const reqCookieVal = parsedCookies[ourCookieName];
 
-
-
-
   if (!parsedCookies || !reqCookieVal) {
+    debugger;
     models.Sessions.create()
       .then(({ insertId }) => {
         models.Sessions.get(insertId)
@@ -19,12 +17,10 @@ module.exports.createSession = (req, res, next) => {
           })
           .catch((err) =>{
             console.log(err);
-
           });
       })
       .catch((err) =>{
         console.log(err);
-
       });
   } else {
 
