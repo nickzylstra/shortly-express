@@ -6,13 +6,17 @@ module.exports.createSession = (req, res, next) => {
   const ourCookieName = 'shortlyid';
   const reqCookieVal = parsedCookies[ourCookieName];
 
+  if (!req.session) {
+    req.session = {};
+  }
+
   if (!parsedCookies || !reqCookieVal) {
-    debugger;
     models.Sessions.create()
       .then(({ insertId }) => {
-        models.Sessions.get(insertId)
-          .then((session) => {
-            res.cookie(ourCookieName, session.hash);
+        models.Sessions.get({id: insertId})
+          .then(({ hash }) => {
+            res.cookie(ourCookieName, hash);
+            req.session.hash = hash;
             next();
           })
           .catch((err) =>{
@@ -23,13 +27,13 @@ module.exports.createSession = (req, res, next) => {
         console.log(err);
       });
   } else {
-
     models.Sessions.get({ hash: reqCookieVal })
       .then((session) => {
         //if(session[0])
+        next();
       })
       .catch((err) => {
-
+        next();
       });
   }
 };
